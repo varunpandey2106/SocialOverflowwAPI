@@ -36,6 +36,7 @@ from .serializers import (UserProfileSerializer, UserSerializer,
 
 # Create your views here.
 
+##AUTH
 
 def email_validator(email):
     """validates & return the entered email if correct
@@ -112,6 +113,143 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
+class UserProfileUpdate(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserProfileSerializer
+    #http_method_names = ['patch', 'head']
+
+
+    def patch(self, *args, **kwargs):
+        profile = self.request.user.userprofile
+        serializer = self.serializer_class(
+            profile, data=self.request.data, partial=True)
+        if serializer.is_valid():
+            user = serializer.save().user
+            new_email = self.request.data.get('email')
+            user = self.request.user
+            if new_email is not None:
+                user.email = new_email
+                profile.email_verified = False
+                user.save()
+                profile.save()
+            return Response({'success': True, 'message': 'successfully updated your info',
+                        'user': UserSerializer(user).data,'updated_email': new_email}, status=200)
+        else:
+            response = serializer.errors
+            return Response(response, status=401)
+
+
+class ProfilePictureUpdate(APIView):
+    permission_classes=[IsAuthenticated]
+    serializer_class=UserProfileSerializer
+    parser_class=(FileUploadParser,)
+
+    def patch(self, *args, **kwargs):
+        rd = random.Random()
+        profile_pic=self.request.FILES['profile_pic']
+        extension = os.path.splitext(profile_pic.name)[1]
+        profile_pic.name='{}{}'.format(uuid.UUID(int=rd.getrandbits(128)), extension)
+        filename = default_storage.save(profile_pic.name, profile_pic)
+        setattr(self.request.user.userprofile, 'profile_pic', filename)
+        serializer=self.serializer_class(
+            self.request.user.userprofile, data={}, partial=True)
+        if serializer.is_valid():
+            user=serializer.save().user
+            response={'type': 'Success', 'message': 'successfully updated your info',
+                        'user': UserSerializer(user).data}
+        else:
+            response=serializer.errors
+        return Response(response)
+
+## POST REQUESTS
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def follow_user(request, username):
+    user = request.user
+    try:
+        user_to_follow = User.objects.get(username=username)
+        user_to_follow_profile = user_to_follow.userprofile
+
+        if user == user_to_follow: 
+            return Response('You can not follow yourself')
+            
+        if user in user_to_follow_profile.followers.all():
+            user_to_follow_profile.followers.remove(user)
+            user_to_follow_profile.followers_count =  user_to_follow_profile.followers.count()
+            user_to_follow_profile.save()
+            return Response('User unfollowed')
+        else:
+            user_to_follow_profile.followers.add(user)
+            user_to_follow_profile.followers_count = user_to_follow_profile.followers.count()
+            user_to_follow_profile.save()
+            # doing this as a signal is much more difficult and hacky
+            # Notification.objects.create(
+            #     to_user=user_to_follow,
+            #     created_by=user,
+            #     notification_type='follow',
+            #     followed_by=user,
+            #     content=f"{user.userprofile.name} started following you."
+            # )
+            return Response('User followed')
+    except Exception as e:
+        message = {'detail':f'{e}'}
+        return Response(message,status=status.HTTP_204_NO_CONTENT)
+    
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def delete_user(request):
+    user = request.user
+    user.delete()
+    return Response({'detail':'Account deleted successfully'},status=status.HTTP_200_OK)
+
+# THIS EMAIL VERIFICATION SYSTEM IS ONLY VALID FOR LOCAL TESTING
+# IN PRODUCTION WE NEED A REAL EMAIL , TILL NOW WE ARE USING DEFAULT EMAIL BACKEND
+# THIS DEFAULT BACKEND WILL PRINT THE VERIFICATION EMAIL IN THE CONSOLE 
+# LATER WE CAN SETUP SMTP FOR REAL EMAIL SENDING TO USER
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def send_activation_email(request):
+    user = request.user
+    user_profile = UserProfile.objects.get(user=user)
+    try:
+        mail_subject = 'Verify your Mumble account.'
+        message = render_to_string('verify-email.html', {
+            'user': user_profile,
+            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+            'token': default_token_generator.make_token(user),
+        })
+        to_email = user.email
+        email = EmailMessage(
+            mail_subject, message, to=[to_email]
+        )
+        email.send()
+        return Response('Mail sent Successfully',status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'detail':f'{e}'},status=status.HTTP_403_FORBIDDEN)
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def password_change(request):
+    user = request.user
+    data = request.data
+    new_password = data.get('new_password')
+    new_password_confirm = data.get('new_password_confirm')
+    if new_password_confirm and new_password is not None:
+        if new_password == new_password_confirm:
+            user.set_password(new_password)
+            user.save()
+            return Response({'detail':'Password changed successfully'},status=status.HTTP_200_OK)
+        else:
+            return Response({"detail":'Password doesn\'t match'})
+    elif new_password is None:
+        return Response({'detail':'New password field required'})
+    elif new_password_confirm is None:
+        return Response({'detail':'New password confirm field required'})
+
+## GET REQUESTS
+
 @api_view(['GET'])
 def users(request):
     query = request.query_params.get('q') or ''
@@ -183,6 +321,25 @@ def profile(request):
     serializer = UserSerializer(user, many=False)
     return Response(serializer.data)
 
+@api_view(['GET'])
+def activate(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User._default_manager.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+    if user is not None and default_token_generator.check_token(user, token):
+        user_profile = UserProfile.objects.get(user=user)
+        user_profile.email_verified = True
+        user_profile.save()
+        return Response("Email Verified")
+    else:
+        return Response('Something went wrong , please try again',status=status.HTTP_406_NOT_ACCEPTABLE)
+    
+
+
+## PATCH REQUESTS
+
 @api_view(['PATCH'])
 @permission_classes((IsAuthenticated,))
 def update_skills(request): 
@@ -206,3 +363,13 @@ def update_interests(request):
     user_profile.save()
     serializer = UserProfileSerializer(user_profile, many=False)
     return Response(serializer.data)
+
+## DELETE REQUESTS
+
+@api_view(['DELETE'])
+@permission_classes((IsAuthenticated,))
+def ProfilePictureDelete(request):
+    user = request.user.userprofile
+    user.profile_pic.url = 'default.png'
+    return Response({'detail':'Profile picture deleted '})
+
