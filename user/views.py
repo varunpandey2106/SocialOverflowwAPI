@@ -148,3 +148,14 @@ def users_recommended(request):
     users = User.objects.annotate(followers_count=Count('userprofile__followers')).order_by('followers_count').reverse().exclude(id=user.id)[0:5]
     serializer = UserSerializer(users, many=True)
     return Response(serializer.data)
+
+@api_view(['GET'])
+def user(request, username):
+    user = User.objects.get(username=username)
+
+    if(request.user.username == username):
+        serializer = CurrentUserSerializer(user, many=False)
+        return Response(serializer.data)
+
+    serializer = UserSerializer(user, many=False)
+    return Response(serializer.data)
