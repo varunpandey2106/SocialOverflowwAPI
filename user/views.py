@@ -159,3 +159,18 @@ def user(request, username):
 
     serializer = UserSerializer(user, many=False)
     return Response(serializer.data)
+
+# @api_view(['GET'])
+# def user_articles(request, username):
+#     user = User.objects.get(username=username)
+#     articles = user.article_set
+#     serializer = ArticleSerializer(articles, many=True)
+#     return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def following(request):
+    user = request.user
+    following = user.following.all()
+    serializer = UserProfileSerializer(following, many=True)
+    return Response(serializer.data)
