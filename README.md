@@ -35,12 +35,12 @@ SocialOverfloww is a blog/thought-post oriented Social Media API that is built u
 
 ## Installation
 
-- Getting Started
-
 Clone the repository and navigate to the project directory:
 ```bash
+
 git clone https://github.com/varunpandey2106/SocialOverFlowwAPIAPI.git
 cd BazaarAPI
+
 ```
 
 - Setup Virtual Environment and install dependencies 
@@ -49,9 +49,6 @@ virtualenv SocialOverFlowwAPI
 pip install -r requirements.txt
 ```
 
-
-
-```
 - Run Migrations and Run Server
 ```bash
 python manage.py makemigrations
@@ -63,8 +60,6 @@ python manage.py runserver
 ```bash
  http://localhost:8000/
 ```
-
-
 
 
 ## Contributing
