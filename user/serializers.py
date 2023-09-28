@@ -8,3 +8,7 @@ class TopicTagSerializer(serializers.ModelSerializer):
         model = TopicTag
         fields = '__all__'
 
+class SkillTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SkillTag
+        fields = '__all__'
