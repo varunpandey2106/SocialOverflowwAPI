@@ -140,3 +140,11 @@ def users_by_skill(request, skill):
         return paginator.get_paginated_response(serializer.data)
     except Exception as e:
         return Response({'detail':f'{e}'},status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def users_recommended(request):
+    user = request.user
+    users = User.objects.annotate(followers_count=Count('userprofile__followers')).order_by('followers_count').reverse().exclude(id=user.id)[0:5]
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
