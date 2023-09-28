@@ -194,3 +194,15 @@ def update_skills(request):
     user_profile.save()
     serializer = UserProfileSerializer(user_profile, many=False)
     return Response(serializer.data)
+
+@api_view(['PATCH'])
+@permission_classes((IsAuthenticated,))
+def update_interests(request): 
+    user_profile = request.user.userprofile
+    interests = request.data
+    user_profile.interests.set(
+        TopicTag.objects.get_or_create(name=interest['name'])[0] for interest in interests
+    )
+    user_profile.save()
+    serializer = UserProfileSerializer(user_profile, many=False)
+    return Response(serializer.data)
