@@ -41,6 +41,10 @@ INSTALLED_APPS = [
 
     ##APPS
     'user'
+
+    ##CONFIG
+    'phonenumber_field',
+
 ]
 
 MIDDLEWARE = [
