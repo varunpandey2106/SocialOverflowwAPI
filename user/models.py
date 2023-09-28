@@ -156,3 +156,12 @@ def send_sms_verification(sender, instance, *args, **kwargs):
 class DeactivateUser(TimeStampedModel):
     user=models.OneToOneField(User, related_name='deactivate',on_delete=models.CASCADE)
     deactive=models.BooleanField(default=True)
+
+# A topic tag is added to by the user so they can content on their feed with the 
+# related tags that
+# They have selected
+class TopicTag(models.Model):
+    name = models.CharField(primary_key=True, max_length=150, null=False, blank=False)
+
+    def __str__(self):
+        return self.name
