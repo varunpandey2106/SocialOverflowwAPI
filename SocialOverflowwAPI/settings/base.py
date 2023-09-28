@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'rest_framework', 
 
     ##APPS
-    'user'
+    'user',
 
     ##CONFIG
     'phonenumber_field',

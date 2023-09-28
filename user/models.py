@@ -57,6 +57,8 @@ class Profile(TimeStampedModel):
     )
 
     user= models.OneToOneField(User,related_name='profile', on_delete=models.CASCADE )
+    name = models.CharField(max_length=200, null=True)
+    username = models.CharField(max_length=200, null=True)
     profile_picture= models.ImageField(upload_to= user_directory_path, blank=True)
     phone_number= PhoneNumberField(blank= False)
     gender=models.CharField(max_length=1, choices=GENDER_CHOICES, blank=False)
@@ -75,7 +77,7 @@ class Profile(TimeStampedModel):
 
 
     def __str__(self):
-        return "% " % self.user.username
+        return str(self.user.username)
     
     def tokens(self):
         refresh = RefreshToken.for_user(self)
