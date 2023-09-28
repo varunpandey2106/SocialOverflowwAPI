@@ -51,3 +51,25 @@ class UserSerializer(serializers.ModelSerializer):
         profile = obj.userprofile
         serializer = UserProfileSerializer(profile, many=False)
         return serializer.data
+
+class UserSerializerWithToken(UserSerializer):
+    access = serializers.SerializerMethodField(read_only=True)
+    refresh = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = User
+        exclude = ['password']
+
+    def get_access(self, obj):
+        token = RefreshToken.for_user(obj)
+
+        token['username'] = obj.username
+        token['name'] = obj.userprofile.name
+        token['profile_pic'] = obj.userprofile.profile_pic.url
+        token['is_staff'] = obj.is_staff
+        token['id'] = obj.id
+        return str(token.access_token)
+    
+    def get_refresh(self, obj):
+        token = RefreshToken.for_user(obj)
+        return str(token)
