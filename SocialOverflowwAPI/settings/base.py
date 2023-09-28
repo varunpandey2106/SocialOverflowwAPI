@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     ##APPS
     'user',
+    'article',
 
     ##CONFIG
     'phonenumber_field',
