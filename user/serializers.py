@@ -31,15 +31,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return pic
 
 class CurrentUserSerializer(serializers.ModelSerializer):
-    profile = serializers.SerializerMethodField(read_only=True)
+    profile = UserProfileSerializer(read_only=True)
+
     class Meta:
         model = User
-        fields = ['id', 'profile', 'username','email','is_superuser', 'is_staff']
+        fields = ['id', 'profile', 'username', 'email', 'is_superuser', 'is_staff']
 
     def get_profile(self, obj):
-        profile = obj.userprofile
+        profile = obj.userprofile if hasattr(obj, 'userprofile') else None
         serializer = UserProfileSerializer(profile, many=False)
-        return serializer.data
+        return serializer.data  # Corrected method to return serialized profile
+
     
 class UserSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField(read_only=True)
@@ -48,9 +50,9 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'profile', 'username', 'is_superuser', 'is_staff']
 
     def get_profile(self, obj):
-        profile = obj.userprofile
+        profile = obj.userprofile if hasattr(obj, 'userprofile') else None
         serializer = UserProfileSerializer(profile, many=False)
-        return serializer.data
+        return serializer.data  # Corrected method to return serialized profile
 
 class UserSerializerWithToken(UserSerializer):
     access = serializers.SerializerMethodField(read_only=True)
@@ -63,13 +65,23 @@ class UserSerializerWithToken(UserSerializer):
     def get_access(self, obj):
         token = RefreshToken.for_user(obj)
 
-        token['username'] = obj.username
-        token['name'] = obj.userprofile.name
-        token['profile_pic'] = obj.userprofile.profile_pic.url
-        token['is_staff'] = obj.is_staff
-        token['id'] = obj.id
+        # Use obj.userprofile if necessary; make sure the field exists
+        user_profile = obj.userprofile if hasattr(obj, 'userprofile') else None
+
+        token_data = {
+            'username': obj.username,
+            'name': user_profile.name if user_profile else None,
+            'profile_pic': user_profile.profile_pic.url if user_profile else None,
+            'is_staff': obj.is_staff,
+            'id': obj.id,
+        }
+
+        token.update(token_data)
         return str(token.access_token)
-    
+
     def get_refresh(self, obj):
         token = RefreshToken.for_user(obj)
         return str(token)
+
+
+
