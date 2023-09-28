@@ -84,3 +84,30 @@ class RegisterView(APIView):
             print(e)
             return Response({'detail':f'{e}'},status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data)
+    
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        token['username'] = user.username
+        token['name'] = user.userprofile.name
+        token['profile_pic'] = 'static' + user.userprofile.profile_pic.url
+        token['is_staff'] = user.is_staff
+        token['id'] = user.id
+
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        serializer = UserSerializerWithToken(self.user).data
+        for k, v in serializer.items():
+            data[k] = v
+
+        return data
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
