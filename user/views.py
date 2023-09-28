@@ -174,3 +174,11 @@ def following(request):
     following = user.following.all()
     serializer = UserProfileSerializer(following, many=True)
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def profile(request):
+    user = request.user
+    serializer = UserSerializer(user, many=False)
+    return Response(serializer.data)
