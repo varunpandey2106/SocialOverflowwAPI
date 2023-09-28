@@ -30,6 +30,23 @@ def user_directory_path(instance, filename):
 AUTH_PROVIDERS = {'facebook': 'facebook', 'google': 'google',
                   'twitter': 'twitter', 'email': 'email', 'github':'github'}
 
+
+# A topic tag is added to by the user so they can content on their feed with the 
+# related tags that
+# They have selected
+class TopicTag(models.Model):
+    name = models.CharField(primary_key=True, max_length=150, null=False, blank=False)
+
+    def __str__(self):
+        return self.name
+    
+# Skills are added by teh user to indicate topics they are proficient in
+class SkillTag(models.Model):
+    name = models.CharField(primary_key=True, max_length=150, null=False, blank=False)
+
+    def __str__(self):
+        return self.name
+    
 class Profile(TimeStampedModel):
     GENDER_MALE='m'
     GENDER_FEMALE='f'
@@ -48,6 +65,13 @@ class Profile(TimeStampedModel):
     auth_provider = models.CharField(
         max_length=255, blank=False,
         null=False, default=AUTH_PROVIDERS.get('email'))
+    vote_ratio = models.IntegerField(blank=True, null=True, default=0)
+    followers_count = models.IntegerField(blank=True, null=True, default=0)
+    skills = models.ManyToManyField(SkillTag, related_name='personal_skills', blank=True)
+    interests = models.ManyToManyField(TopicTag, related_name='topic_interests', blank=True)
+    followers = models.ManyToManyField(User, related_name='following', blank=True)
+    email_verified = models.BooleanField(default=False)
+    id = models.UUIDField(default=uuid.uuid4,  unique=True, primary_key=True, editable=False)
 
 
     def __str__(self):
@@ -80,7 +104,6 @@ class Profile(TimeStampedModel):
 def create_user_profile(sender, instance,created,*args, **kwargs):
     if created:
         Profile.objects.create(user=instance)
-
 
 class SMSVerification(TimeStampedModel):
     user= models.OneToOneField(User, related_name= 'phone', on_delete=models.CASCADE)
@@ -156,19 +179,3 @@ def send_sms_verification(sender, instance, *args, **kwargs):
 class DeactivateUser(TimeStampedModel):
     user=models.OneToOneField(User, related_name='deactivate',on_delete=models.CASCADE)
     deactive=models.BooleanField(default=True)
-
-# A topic tag is added to by the user so they can content on their feed with the 
-# related tags that
-# They have selected
-class TopicTag(models.Model):
-    name = models.CharField(primary_key=True, max_length=150, null=False, blank=False)
-
-    def __str__(self):
-        return self.name
-    
-# Skills are added by teh user to indicate topics they are proficient in
-class SkillTag(models.Model):
-    name = models.CharField(primary_key=True, max_length=150, null=False, blank=False)
-
-    def __str__(self):
-        return self.name
