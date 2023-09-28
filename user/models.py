@@ -128,3 +128,31 @@ class SMSVerification(TimeStampedModel):
             raise NotAcceptable("your pin is wrong, or this phone number has been verified before")
         
         return self.verified
+
+@receiver(post_save,sender=Profile)
+def send_sms_verification(sender, instance, *args, **kwargs):
+    try:
+        sms=instance.user.sms
+        if sms:
+            pin=sms.pin
+            sms.delete()
+            verification=SMSVerification.objects.create(
+                user=instance.user,
+                phone=instance.user.profile.phone_number,
+                sent= True,
+                verified=True,
+                pin=pin,
+            )
+
+    
+    except:
+        if instance.user.profile.phone_number:
+            verification=SMSVerification.objects.create(
+                user=instance.user,phone=instance.user.profile.phone_number
+            )
+            # todo remove send_confirm and make view for it
+            verification.send_confirmation()
+
+class DeactivateUser(TimeStampedModel):
+    user=models.OneToOneField(User, related_name='deactivate',on_delete=models.CASCADE)
+    deactive=models.BooleanField(default=True)
