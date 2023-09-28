@@ -47,7 +47,7 @@ class SkillTag(models.Model):
     def __str__(self):
         return self.name
     
-class Profile(TimeStampedModel):
+class UserProfile(TimeStampedModel):
     GENDER_MALE='m'
     GENDER_FEMALE='f'
 
@@ -105,7 +105,7 @@ class Profile(TimeStampedModel):
 @receiver(post_save,sender=User)
 def create_user_profile(sender, instance,created,*args, **kwargs):
     if created:
-        Profile.objects.create(user=instance)
+        UserProfile.objects.create(user=instance)
 
 class SMSVerification(TimeStampedModel):
     user= models.OneToOneField(User, related_name= 'phone', on_delete=models.CASCADE)
@@ -154,7 +154,7 @@ class SMSVerification(TimeStampedModel):
         
         return self.verified
 
-@receiver(post_save,sender=Profile)
+@receiver(post_save,sender=UserProfile)
 def send_sms_verification(sender, instance, *args, **kwargs):
     try:
         sms=instance.user.sms
