@@ -182,3 +182,15 @@ def profile(request):
     user = request.user
     serializer = UserSerializer(user, many=False)
     return Response(serializer.data)
+
+@api_view(['PATCH'])
+@permission_classes((IsAuthenticated,))
+def update_skills(request): 
+    user_profile = request.user.userprofile
+    skills = request.data
+    user_profile.skills.set(
+        SkillTag.objects.get_or_create(name=skill['name'])[0] for skill in skills
+    )
+    user_profile.save()
+    serializer = UserProfileSerializer(user_profile, many=False)
+    return Response(serializer.data)
