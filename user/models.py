@@ -80,3 +80,51 @@ class Profile(TimeStampedModel):
 def create_user_profile(sender, instance,created,*args, **kwargs):
     if created:
         Profile.objects.create(user=instance)
+
+
+class SMSVerification(TimeStampedModel):
+    user= models.OneToOneField(User, related_name= 'phone', on_delete=models.CASCADE)
+    number= PhoneNumberField(unique= True)
+    pin= RandomPinField(length=6)
+    is_verified=models.BooleanField(default=False)
+    sent= models.BooleanField(default=False)
+    phone= PhoneNumberField(null= True)
+
+    def send_confirmation(self):
+
+        logging.debug("Sending PIN %s to phone %s" % (self.pin,self.phone))
+
+        if all(
+            [
+                settings.TWILIO_ACCOUNT_SID,
+                settings.TWILIO_AUTH_TOKEN,
+                settings.TWILIO_FROM_NUMBER
+            ]
+        ):
+            
+            try:
+                twilio_client=Client(
+                    settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN
+                )
+                twilio_client.messages.create(
+                    body="Your forgotten activation code is %s" % self.pin, 
+                    to=str(self.user.profile.phone_number),
+                    from_=settings.TWILIO_FROM_NUMBER,
+                )
+
+                self.sent=True
+                self.save()
+                return True
+            except TwilioRestException as e:
+                logging.error(e)
+        else:
+            logging.warning('Twilio credentials are not set')
+    
+    def confirm(self,pin):
+        if pin==self.pin and self.verified==False:
+            self.verified=True
+            self.save()
+        else:
+            raise NotAcceptable("your pin is wrong, or this phone number has been verified before")
+        
+        return self.verified
