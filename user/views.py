@@ -111,3 +111,16 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+@api_view(['GET'])
+def users(request):
+    query = request.query_params.get('q') or ''
+    users = User.objects.filter(
+        Q(userprofile__name__icontains=query) | 
+        Q(userprofile__username__icontains=query)
+    ).order_by('-userprofile__followers_count')
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    result_page = paginator.paginate_queryset(users,request)
+    serializer = UserSerializer(result_page, many=True)
+    return paginator.get_paginated_response(serializer.data)
