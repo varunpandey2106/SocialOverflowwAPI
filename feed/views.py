@@ -137,10 +137,10 @@ def feed_posts(request):
 @permission_classes((IsAuthenticated,))
 def feedpost_details(request, pk):
     try:
-        feedpost = FeedPost.objects.get(id=pk)  # Replace Mumble with FeedPost
+        feedpost = FeedPost.objects.get(id=pk)  
         serializer = FeedPostSerializer(feedpost, many=False)
         return Response(serializer.data)
-    except FeedPost.DoesNotExist:  # Replace Mumble.DoesNotExist
+    except FeedPost.DoesNotExist:
         message = {
             'detail': 'Feed Post doesn\'t exist'
         }
@@ -149,12 +149,56 @@ def feedpost_details(request, pk):
 @api_view(['GET'])
 def feedpost_comments(request, pk):
     try:
-        feedpost = FeedPost.objects.get(id=pk)  # Replace Mumble with FeedPost
-        comments = feedpost.feedpost_set.all()  # Update mumble_set to feedpost_set
+        feedpost = FeedPost.objects.get(id=pk)  
+        comments = feedpost.feedpost_set.all()  
         serializer = FeedPostSerializer(comments, many=True)
         return Response(serializer.data)
-    except FeedPost.DoesNotExist:  # Replace Mumble.DoesNotExist
+    except FeedPost.DoesNotExist: 
         message = {
             'detail': 'Feed Post doesn\'t exist'
         }
         return Response(message, status=status.HTTP_404_NOT_FOUND)
+    
+
+## PATCH REQUESTS
+
+@api_view(['PATCH'])
+@permission_classes((IsAuthenticated,))
+def edit_feedpost(request, pk):
+    user = request.user
+    data = request.data
+
+    try:
+        feedpost = FeedPost.objects.get(id=pk) 
+        if user != feedpost.user:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            serializer = FeedPostSerializer(feedpost, data=data)  # Use FeedPostSerializer
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+    except FeedPost.DoesNotExist: 
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+## DELETE
+
+@api_view(['DELETE'])
+@permission_classes((IsAuthenticated,))
+def delete_feedpost(request, pk):
+    user = request.user
+    try:
+        feedpost = FeedPost.objects.get(id=pk)  
+        if user != feedpost.user:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            feedpost.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+    except FeedPost.DoesNotExist: 
+        return Response({'details': 'Feed Post doesn\'t exist'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'details': str(e)}, status=status.HTTP_204_NO_CONTENT)
+
+
