@@ -39,6 +39,22 @@ class FeedPost(models.Model):
     def comments(self):
         queryset = FeedPost.objects.filter(parent=self)
         return queryset
+    
+class FeedPostVote(models.Model):
+    
+    CHOICES = (
+        ('upvote', 'upvote'),
+        ('downvote', 'downvote'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    feedpost = models.ForeignKey(FeedPost, on_delete=models.CASCADE, null=True, blank=True)
+    value = models.CharField(max_length=20, choices=CHOICES)
+    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+
+    def __str__(self):
+        return str(self.user) + ' ' + str(self.value) + ' "' + str(self.feedpost) + '"'
+
 
 
     
