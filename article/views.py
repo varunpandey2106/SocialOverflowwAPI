@@ -132,3 +132,33 @@ def edit_article_comment(request,pk):
             return Response(status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         return Response({'details': f"{e}"},status=status.HTTP_204_NO_CONTENT)
+    
+
+## DELETE REQUESTS
+
+@api_view(['DELETE'])
+@permission_classes((IsAuthenticated,))
+def delete_article(request,pk):
+    try:
+        article = Article.objects.get(id=pk)
+        if article.user == request.user:
+            article.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({'details': f"{e}"},status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['DELETE'])
+@permission_classes((IsAuthenticated,))
+def delete_article_comment(request,pk):
+    try:
+        comment = ArticleComment.objects.get(id=pk)
+        if comment.user == request.user:
+            serializer = ArticleCommentSerializer(comment,many=False)
+            comment.delete()
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({'details': f"{e}"},status=status.HTTP_204_NO_CONTENT)
