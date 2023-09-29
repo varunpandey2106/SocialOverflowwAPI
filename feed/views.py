@@ -90,3 +90,71 @@ def update_vote(request):
     serializer = FeedPostSerializer(feedpost, many=False)
 
     return Response(serializer.data)
+
+## GET REQUESTS
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def feed_posts(request):
+    query = request.query_params.get('q')
+    if query is None:
+        query = ''
+
+    user = request.user
+    following = user.following.select_related('user')
+    following_ids = [following_user.user.id for following_user in following]
+    following_ids.append(user.id)
+
+    # Query 5 feed posts from users you follow | TOP PRIORITY
+    feed_posts = FeedPost.objects.filter(
+        parent=None, user__id__in=following_ids
+    ).order_by("-created")[:5]
+
+    # Query recent feed posts with positive vote rank and no reshare
+    recent_feed_posts = FeedPost.objects.filter(
+        Q(parent=None) & Q(vote_rank__gte=0) & Q(reshare=None)
+    ).order_by("-created")[:5]
+
+    # Query top-ranked feed posts and append them to the original queryset
+    top_feed_posts = FeedPost.objects.filter(Q(parent=None)).order_by("-vote_rank", "-created")
+
+    # Add top-ranked feed posts to the feed after prioritizing the follow list
+    for feed_post in recent_feed_posts:
+        if feed_post not in feed_posts:
+            feed_posts.insert(0, feed_post)
+
+    for feed_post in top_feed_posts:
+        if feed_post not in feed_posts:
+            feed_posts.append(feed_post)
+
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    result_page = paginator.paginate_queryset(feed_posts, request)
+    serializer = FeedPostSerializer(result_page, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def feedpost_details(request, pk):
+    try:
+        feedpost = FeedPost.objects.get(id=pk)  # Replace Mumble with FeedPost
+        serializer = FeedPostSerializer(feedpost, many=False)
+        return Response(serializer.data)
+    except FeedPost.DoesNotExist:  # Replace Mumble.DoesNotExist
+        message = {
+            'detail': 'Feed Post doesn\'t exist'
+        }
+        return Response(message, status=status.HTTP_404_NOT_FOUND)
+    
+@api_view(['GET'])
+def feedpost_comments(request, pk):
+    try:
+        feedpost = FeedPost.objects.get(id=pk)  # Replace Mumble with FeedPost
+        comments = feedpost.feedpost_set.all()  # Update mumble_set to feedpost_set
+        serializer = FeedPostSerializer(comments, many=True)
+        return Response(serializer.data)
+    except FeedPost.DoesNotExist:  # Replace Mumble.DoesNotExist
+        message = {
+            'detail': 'Feed Post doesn\'t exist'
+        }
+        return Response(message, status=status.HTTP_404_NOT_FOUND)
