@@ -99,3 +99,24 @@ def articles(request):
     result_page = paginator.paginate_queryset(articles,request)
     serializer = ArticleSerializer(result_page, many=True)
     return paginator.get_paginated_response(serializer.data)
+
+## PUT REQUESTS
+
+@api_view(['PUT'])
+@permission_classes((IsAuthenticated,))
+def edit_article(request,pk):
+    try:
+        article = Article.objects.get(id=pk)
+        if article.user == request.user:
+            data = request.data
+            article.title = data.get('title')
+            article.content = data.get('content')
+            article.tags = data.get('tags')
+            article.save()
+            serializer = ArticleSerializer(article, many=False)
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({'details': f"{e}"},status=status.HTTP_204_NO_CONTENT)
+    
