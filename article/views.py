@@ -120,3 +120,15 @@ def edit_article(request,pk):
     except Exception as e:
         return Response({'details': f"{e}"},status=status.HTTP_204_NO_CONTENT)
     
+@api_view(['PUT'])
+@permission_classes((IsAuthenticated,))
+def edit_article_comment(request,pk):
+    try:
+        comment = ArticleComment.objects.get(id=pk)
+        if comment.user == request.user:
+            serializer = ArticleCommentSerializer(comment,many=False)
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({'details': f"{e}"},status=status.HTTP_204_NO_CONTENT)
