@@ -91,3 +91,76 @@ def discussions(request):
     result_page = paginator.paginate_queryset(discussions,request)
     serializer = DiscussionSerializer(result_page, many=True)
     return paginator.get_paginated_response(serializer.data)
+
+@api_view(['GET'])
+def get_discussion(request, pk):
+    try:
+        discussion= Discussion.objects.get(id=pk)
+        serializer = DiscussionSerializer(discussion, many=False)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+## PUT REQUESTS
+
+@api_view(['PUT'])
+@permission_classes((IsAuthenticated,))
+def edit_discussion(request,pk):
+    try:
+        discussion= Discussion.objects.get(id=pk)
+        if discussion.user == request.user:
+            data = request.data
+            discussion.headline = data.get('headline')
+            discussion.content = data.get('content')
+            # tags field will be included after issue 23 is resolved
+            # discussion.tags = data.get('tags')
+            discussion.save()
+            serializer = DiscussionSerializer(discussion, many=False)
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({'detail':f'{e}'},status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['PUT'])
+@permission_classes((IsAuthenticated,))
+def edit_discussion_comment(request,pk):
+    try:
+        comment = DiscussionComment.objects.get(id=pk)
+        if comment.user == request.user:
+            serializer = DiscussionCommentSerializer(comment,many=False)
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({'detail':f'{e}'},status=status.HTTP_204_NO_CONTENT)
+    
+## DELETE REQUESTS
+
+@api_view(['DELETE'])
+@permission_classes((IsAuthenticated,))
+def delete_discussion(request,pk):
+    try:
+        discussion= Discussion.objects.get(id=pk)
+        if discussion.user == request.user:
+            discussion.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({'detail':f'{e}'},status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['DELETE'])
+@permission_classes((IsAuthenticated,))
+def delete_discussion_comment(request,pk):
+    try:
+        comment = DiscussionComment.objects.get(id=pk)
+        if comment.user == request.user:
+            serializer = DiscussionCommentSerializer(comment,many=False)
+            comment.delete()
+            return Response(serializer.data)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({'detail':f'{e}'},status=status.HTTP_204_NO_CONTENT)
