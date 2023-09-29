@@ -66,3 +66,27 @@ def reshare(request):
         return Response(serializer.data)
     except Exception as e:
         return Response({'detail': str(e)}, status=status.HTTP_403_FORBIDDEN)
+    
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def update_vote(request):
+    user = request.user 
+    data = request.data
+
+    feedpost = FeedPost.objects.get(id=data['post_id'])
+    
+    # What if the user is trying to remove their vote?
+    vote, created = FeedPostVote.objects.get_or_create(feedpost=feedpost, user=user)
+
+    if vote.value == data.get('value'):
+        # If the same value is sent, the user is clicking on the vote to remove it
+        vote.delete()
+    else:
+        vote.value = data['value']
+        vote.save()
+
+    # We re-query the feedpost to get the latest vote rank value
+    feedpost = FeedPost.objects.get(id=data['post_id'])
+    serializer = FeedPostSerializer(feedpost, many=False)
+
+    return Response(serializer.data)
