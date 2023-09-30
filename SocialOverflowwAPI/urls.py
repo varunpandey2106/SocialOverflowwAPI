@@ -23,6 +23,7 @@ urlpatterns = [
     path('user/', include('user.urls') ),
     path('article/', include('article.urls')),
     path('feed/', include('feed.urls')),
-    path('discussion/', include('discussion.urls'))
+    path('discussion/', include('discussion.urls')),
+    path('message/', include('message.urls'))
 
 ]
