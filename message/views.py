@@ -53,3 +53,25 @@ def create_message(request):
 
 ##GET REQUESTS
 
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def get_messages(request): #retrieve a list of message threads for a specific user.
+    user = request.user.userprofile
+    threads = Thread.objects.filter(Q(sender=user)|Q(reciever=user))
+    serializer = ThreadSerializer(threads, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def read_message(request, pk): #retrieve and mark messages within a specific message thread as read.
+    try:
+        thread = Thread.objects.get(id=pk)
+        messages = thread.messages.all()
+        un_read = thread.messages.filter(is_read=False)
+        for msg in un_read:
+            msg.is_read = True
+            msg.save()
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        return Response({'details': f"{e}"},status=status.HTTP_204_NO_CONTENT)
