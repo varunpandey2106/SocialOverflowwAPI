@@ -20,7 +20,7 @@ class FeedPostSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def get_original_feedpost(self, obj):
-        original = obj.reshare  # Use 'reshare' instead of 'remumble'
+        original = obj.reshare  
         if original:
             serializer = FeedPostSerializer(original, many=False)
             return serializer.data

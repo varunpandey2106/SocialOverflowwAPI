@@ -27,7 +27,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 # from article.serializers import ArticleSerializer
-# from feed.serializers import MumbleSerializer
+# from feed.serializers import FeedPostSerializer
 # from notification.models import Notification
 
 from .models import UserProfile, SkillTag, TopicTag
@@ -214,7 +214,7 @@ def send_activation_email(request):
     user = request.user
     user_profile = UserProfile.objects.get(user=user)
     try:
-        mail_subject = 'Verify your Mumble account.'
+        mail_subject = 'Verify your SocialOverFloww account.'
         message = render_to_string('verify-email.html', {
             'user': user_profile,
             'uid': urlsafe_base64_encode(force_bytes(user.pk)),
