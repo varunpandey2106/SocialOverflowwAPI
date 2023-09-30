@@ -23,3 +23,11 @@ dnspython==2.4.2
 email-validator==2.0.0.post2
 django-ckeditor==6.7.0 
 django-js-asset==2.1.0
+cffi-1.16.0 
+cryptography-41.0.4 
+defusedxml-0.7.1 
+django-allauth-0.57.0 
+oauthlib-3.2.2 
+pycparser-2.21 
+python3-openid-3.2.0 
+requests-oauthlib-1.3.1

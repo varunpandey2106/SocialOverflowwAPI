@@ -56,7 +56,7 @@ class UserProfile(TimeStampedModel):
         (GENDER_FEMALE, 'Female')
     )
 
-    user= models.OneToOneField(User,related_name='userprofile', on_delete=models.CASCADE )
+    user = models.OneToOneField(User, related_name='userprofile', on_delete=models.CASCADE)
     name = models.CharField(max_length=200, null=True)
     username = models.CharField(max_length=200, null=True)
     profile_picture= models.ImageField(upload_to= user_directory_path, blank=True)
