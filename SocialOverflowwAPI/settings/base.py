@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'feed',
     'discussion', 
     'message',
+    'notification', 
 
     ##CONFIG
     'phonenumber_field',
