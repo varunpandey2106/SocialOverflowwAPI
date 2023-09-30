@@ -40,6 +40,21 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "socialdb",
+        "USER": "postgres", 
+        "PASSWORD": "boombamboom",
+        "HOST": "localhost",
+        "PORT": "5432"
+        # "OPTIONS": {
+        #     "service": "my_service",
+        #     "passfile": ".my_pgpass",
+        # },
+    }
+}
+
 # Application definition
 
 INSTALLED_APPS = [
