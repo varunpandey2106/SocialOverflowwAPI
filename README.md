@@ -6,13 +6,16 @@ SocialOverfloww is a blog/thought-post oriented Social Media API that is built u
 
 ## Features
 
-- **User Management and Authentication**
+- **User Management and Authentication, Social Login**
 - **Post/Artcile Management**
 - **Feed**
 - **Notifications**
 - **Discussions**
 - **Messaging**
 - **Third party Integrations**
+
+## DB DIAGRAM
+![Screenshot 2023-09-30 144318](https://github.com/varunpandey2106/SocialOverflowwAPI/assets/77747699/2055d85a-3f1f-4ee2-bcdb-8b12381dbeef)
 
 ## Future Work
 
@@ -25,6 +28,7 @@ SocialOverfloww is a blog/thought-post oriented Social Media API that is built u
 - **Django REST framework**
 - **Celery** 
 - **PostgreSQL**
+- **DrawSQL**
 -  **AWS RDS**
 - **OAuth2**
 - **Twillio API**
