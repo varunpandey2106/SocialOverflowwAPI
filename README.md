@@ -29,7 +29,6 @@ SocialOverfloww is a blog/thought-post oriented Social Media API that is built u
 - **Celery** 
 - **PostgreSQL**
 - **DrawSQL**
--  **AWS RDS**
 - **OAuth2**
 - **Twillio API**
 - **Gmail API**
