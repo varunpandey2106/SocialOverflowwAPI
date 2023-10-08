@@ -17,6 +17,12 @@ SocialOverfloww is a blog/thought-post oriented Social Media API that is built u
 ## DB DIAGRAM
 ![Screenshot 2023-09-30 144318](https://github.com/varunpandey2106/SocialOverflowwAPI/assets/77747699/2055d85a-3f1f-4ee2-bcdb-8b12381dbeef)
 
+## Swagger
+
+![Screenshot 2023-10-08 210208](https://github.com/varunpandey2106/BaazaarAPI/assets/77747699/b673047d-db70-43ec-84cb-b6cdc2aba2ef)
+
+
+
 ## Future Work
 
 - **search and discovery using elasticsearch**
